@@ -179,6 +179,15 @@ async def start():
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
 
+    async def main():
+        # Снимаем вебхук, чтобы исключить конфликт
+        await bot.delete_webhook(drop_pending_updates=True)
+        # Запускаем long polling
+        await dp.start_polling(bot)
+
+    if __name__ == "__main__":
+        asyncio.run(main())
+
     dp.chat_join_request.register(approve_request, F.chat.id == CHANNEL_ID)
     dp.message.register(handle_start, F.text == "/start")
     dp.message.register(handle_broadcast, F.text.startswith("/broadcast"))
