@@ -2,9 +2,9 @@ import asyncio
 import logging
 import contextlib
 import sqlite3
-os.makedirs("data", exist_ok=True)
 import io
 import os
+os.makedirs("data", exist_ok=True)
 from flask import Flask
 from threading import Thread
 from dotenv import load_dotenv
