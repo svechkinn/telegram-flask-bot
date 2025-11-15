@@ -132,6 +132,25 @@ async def handle_broadcast(message: Message):
     await broadcast(message.bot, text)
     await message.answer("✅ Рассылка завершена")
 
+# 📢 Рассылка медиа (только для админа)
+async def handle_broadcast_media(message: Message):
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    if not message.reply_to_message:
+        await message.answer("❌ Используй команду /broadcast_media как ответ на медиа‑сообщение")
+        return
+
+    users = db.get_users()
+    for user_id, username, first_name in users:
+        try:
+            await message.reply_to_message.copy_to(chat_id=user_id)
+            await asyncio.sleep(0.05)
+        except Exception as e:
+            print(f"Не удалось отправить {user_id}: {e}")
+
+    await message.answer("✅ Рассылка медиа завершена")
+
 async def handle_list_users(message: Message):
     if message.from_user.id != ADMIN_ID:
         return
@@ -176,6 +195,7 @@ async def main():
     # регистрируем хэндлеры
     dp.chat_join_request.register(approve_request, F.chat.id == CHANNEL_ID)
     dp.message.register(handle_start, F.text == "/start")
+    dp.message.register(handle_broadcast_media, F.text == "/broadcast_media")
     dp.message.register(handle_broadcast, F.text.startswith("/broadcast"))
     dp.message.register(handle_list_users, F.text == "/list_users")
     dp.message.register(handle_export_users, F.text == "/export_users")
