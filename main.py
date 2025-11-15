@@ -25,15 +25,15 @@ import db   # импортируем наш модуль
 # при старте приложения инициализируем базу
 db.init_db()
 # 🌐 Flask-сервер для UptimeRobot
-app_web = Flask('')
+from flask import Flask
+app = Flask(__name__)
 
 @app.route('/')
 def home():
     return '✅ Бот работает!'
 
-
 def run():
-    app_web.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=8080)
 
 def keep_alive():
     t = Thread(target=run)
