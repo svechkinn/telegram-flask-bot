@@ -13,7 +13,7 @@ from aiogram.types import (
     FSInputFile, BufferedInputFile,
 )
 from aiogram.filters import Command
-from aiogram import Bot, Dispatcher, F, types,
+from aiogram import Bot, Dispatcher, F, types
 
 import db   # импортируем наш модуль работы с базой
 
