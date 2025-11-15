@@ -233,3 +233,4 @@ threading.Thread(target=ping_self).start()
 if __name__ == '__main__':
     keep_alive()  # запуск Flask-сервера
     with contextlib.suppress(KeyboardInterrupt, SystemExit):
+        asyncio.run(main())
