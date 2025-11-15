@@ -4,10 +4,10 @@ import contextlib
 import sqlite3
 import io
 import os
-os.makedirs("data", exist_ok=True)
 from flask import Flask
 from threading import Thread
 from dotenv import load_dotenv
+os.makedirs("data", exist_ok=True)
 
 from aiogram.types import (
     ChatJoinRequest, InlineKeyboardMarkup, ReplyKeyboardMarkup,
