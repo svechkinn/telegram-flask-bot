@@ -4,11 +4,7 @@ import os
 DB_PATH = "/data/users.db"
 
 def init_db():
-    # если файла базы нет — создаём пустой
-    if not os.path.exists(DB_PATH):
-        open(DB_PATH, "w").close()
-
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH)   # SQLite сам создаст файл, если его нет
     cursor = conn.cursor()
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
@@ -37,3 +33,4 @@ def get_users():
     users = cursor.fetchall()
     conn.close()
     return users
+
