@@ -1,11 +1,8 @@
 import sqlite3
-import os
 
-# Путь к базе
 DB_PATH = "/data/users.db"
 
 def init_db():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
@@ -34,3 +31,4 @@ def get_users():
     cursor.execute("SELECT user_id, username, first_name FROM users")
     users = cursor.fetchall()
     conn.close()
+    return users
