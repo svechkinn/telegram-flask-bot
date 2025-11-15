@@ -179,10 +179,29 @@ async def start():
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
 
+    # Инициализация базы
+    db.init_db()
+
+    # Команда /start — сохраняем пользователя, но не отвечаем
+    @dp.message(Command("start"))
+    async def start_handler(message: types.Message):
+        db.save_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
+        # без ответа пользователю
+
+    # Команда /list_users — выводим список пользователей
+    @dp.message(Command("list_users"))
+    async def list_users_handler(message: types.Message):
+        users = db.get_users()
+        if users:
+            text = "\n".join([f"{u[0]} | {u[1]} | {u[2]}" for u in users])
+        else:
+            text = "Пока нет пользователей."
+        await message.answer(text)
+
     async def main():
-        # Снимаем вебхук, чтобы исключить конфликт
+        # снимаем вебхук, чтобы не было конфликта
         await bot.delete_webhook(drop_pending_updates=True)
-        # Запускаем long polling
+        # запускаем polling
         await dp.start_polling(bot)
 
     if __name__ == "__main__":
