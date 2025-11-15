@@ -27,9 +27,10 @@ db.init_db()
 # 🌐 Flask-сервер для UptimeRobot
 app_web = Flask('')
 
-@app_web.route('/')
+@app.route('/')
 def home():
-    return "✅ Бот работает!"
+    return '✅ Бот работает!'
+
 
 def run():
     app_web.run(host='0.0.0.0', port=8080)
@@ -269,6 +270,21 @@ async def start():
         logging.error(f'[Exception]: {ex}', exc_info=True)
     finally:
         await bot.session.close()
+
+
+import threading
+import time
+import requests
+
+def ping_self():
+    while True:
+        try:
+            requests.get("https://telegram-flask-bot.onrender.com")
+        except:
+            pass
+        time.sleep(600)  # каждые 10 минут
+
+threading.Thread(target=ping_self).start()
 
 
 if __name__ == '__main__':
