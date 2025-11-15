@@ -7,6 +7,7 @@ import os
 from flask import Flask
 from threading import Thread
 from dotenv import load_dotenv
+os.makedirs("data", exist_ok=True)
 
 from aiogram.types import (
     ChatJoinRequest, InlineKeyboardMarkup, ReplyKeyboardMarkup,
@@ -53,7 +54,7 @@ TELEGRAM_WEBAPP_URL = "https://yourdomain.com"
 user_welcome_messages = {}
 
 # 📂 База пользователей
-conn = sqlite3.connect("users.db")
+conn = sqlite3.connect("data/users.db")
 cursor = conn.cursor()
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
@@ -101,6 +102,8 @@ async def track_subscription(bot: Bot, user_id: int, message: Message):
         await asyncio.sleep(5)
         if await is_subscribed(bot, user_id, REQUIRED_CHANNEL):
             await message.answer("✅ Подписка есть, сейчас тебя добавят быстрее!")
+            break
+
 
 # ✅ Обработка команды /start
 async def handle_start(message: Message):
