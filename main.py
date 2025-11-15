@@ -2,17 +2,17 @@ import asyncio
 import logging
 import contextlib
 import sqlite3
+os.makedirs("data", exist_ok=True)
 import io
 import os
 from flask import Flask
 from threading import Thread
 from dotenv import load_dotenv
-os.makedirs("data", exist_ok=True)
 
 from aiogram.types import (
     ChatJoinRequest, InlineKeyboardMarkup, ReplyKeyboardMarkup,
     KeyboardButton, InlineKeyboardButton, Message, WebAppInfo,
-    FSInputFile,
+    FSInputFile, BufferedInputFile,
 )
 from aiogram.filters import Command
 import asyncio
