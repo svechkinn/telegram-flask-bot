@@ -7,7 +7,7 @@ import os
 from flask import Flask
 from threading import Thread
 from dotenv import load_dotenv
-os.makedirs("data", exist_ok=True)
+os.makedirs("/data", exist_ok=True)
 
 from aiogram.types import (
     ChatJoinRequest, InlineKeyboardMarkup, ReplyKeyboardMarkup,
@@ -15,12 +15,7 @@ from aiogram.types import (
     FSInputFile, BufferedInputFile,
 )
 from aiogram.filters import Command
-import asyncio
 from aiogram import Bot, Dispatcher, F
-import logging
-import contextlib
-import sqlite3
-import io
 import db   # импортируем наш модуль
 
 # при старте приложения инициализируем базу
@@ -54,7 +49,7 @@ TELEGRAM_WEBAPP_URL = "https://yourdomain.com"
 user_welcome_messages = {}
 
 # 📂 База пользователей
-conn = sqlite3.connect("data/users.db")
+conn = sqlite3.connect("/data/users.db")
 cursor = conn.cursor()
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
