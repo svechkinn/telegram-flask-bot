@@ -1,13 +1,11 @@
 import asyncio
 import logging
 import contextlib
-import sqlite3
 import io
 import os
 from flask import Flask
 from threading import Thread
 from dotenv import load_dotenv
-os.makedirs("/data", exist_ok=True)
 
 from aiogram.types import (
     ChatJoinRequest, InlineKeyboardMarkup, ReplyKeyboardMarkup,
@@ -16,12 +14,13 @@ from aiogram.types import (
 )
 from aiogram.filters import Command
 from aiogram import Bot, Dispatcher, F
-import db   # импортируем наш модуль
+
+import db   # импортируем наш модуль работы с базой
 
 # при старте приложения инициализируем базу
 db.init_db()
+
 # 🌐 Flask-сервер для UptimeRobot
-from flask import Flask
 app = Flask(__name__)
 
 @app.route('/')
@@ -48,25 +47,9 @@ TELEGRAM_WEBAPP_URL = "https://yourdomain.com"
 
 user_welcome_messages = {}
 
-# 📂 База пользователей
-conn = sqlite3.connect("/data/users.db")
-cursor = conn.cursor()
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS users (
-    user_id INTEGER PRIMARY KEY,
-    username TEXT,
-    first_name TEXT
-)
-""")
-conn.commit()
-
 # Сохранение пользователя
 async def save_user(user):
-    cursor.execute(
-        "INSERT OR REPLACE INTO users (user_id, username, first_name) VALUES (?, ?, ?)",
-        (user.id, user.username, user.first_name)
-    )
-    conn.commit()
+    db.save_user(user.id, user.username, user.first_name)
 
 # 🔍 Проверка подписки
 async def is_subscribed(bot: Bot, user_id: int, channel: str) -> bool:
@@ -99,7 +82,6 @@ async def track_subscription(bot: Bot, user_id: int, message: Message):
             await message.answer("✅ Подписка есть, сейчас тебя добавят быстрее!")
             break
 
-
 # ✅ Обработка команды /start
 async def handle_start(message: Message):
     await save_user(message.from_user)
@@ -112,7 +94,6 @@ async def handle_start(message: Message):
         "🚀 Скоро у нас появится удобное приложение!\n\nА пока можешь подписаться на Telegram-канал, чтобы быть в курсе 👇",
         reply_markup=subscribe_keyboard
     )
-
 
 # ✉️ Обработка любого текста
 async def handle_any_message(message: Message):
@@ -137,9 +118,8 @@ async def handle_any_message(message: Message):
 
 # 📢 Простая рассылка
 async def broadcast(bot: Bot, text: str):
-    cursor.execute("SELECT user_id FROM users")
-    users = cursor.fetchall()
-    for (user_id,) in users:
+    users = db.get_users()
+    for user_id, username, first_name in users:
         try:
             await bot.send_message(chat_id=user_id, text=text)
             await asyncio.sleep(0.05)
@@ -156,65 +136,11 @@ async def handle_broadcast(message: Message):
     await broadcast(message.bot, text)
     await message.answer("✅ Рассылка завершена")
 
-# 📢 Медиа-рассылка через file_id
-async def broadcast_media(bot: Bot, text: str, media_id: str = None, media_type: str = None):
-    cursor.execute("SELECT user_id FROM users")
-    users = cursor.fetchall()
-
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="🚀 Открыть приложение", web_app=WebAppInfo(url=TELEGRAM_WEBAPP_URL))]
-        ]
-    )
-
-    for (user_id,) in users:
-        try:
-            if media_id:
-                if media_type == "photo":
-                    await bot.send_photo(chat_id=user_id, photo=media_id, caption=text, reply_markup=keyboard)
-                elif media_type == "video":
-                    await bot.send_video(chat_id=user_id, video=media_id, caption=text, reply_markup=keyboard)
-                elif media_type == "document":
-                    await bot.send_document(chat_id=user_id, document=media_id, caption=text, reply_markup=keyboard)
-            else:
-                await bot.send_message(chat_id=user_id, text=text, reply_markup=keyboard)
-            await asyncio.sleep(0.05)
-        except Exception as e:
-            print(f"Не удалось отправить {user_id}: {e}")
-
-
-async def handle_broadcast_media(message: Message):
-    if message.from_user.id != ADMIN_ID:
-        return
-
-    # Берём текст из caption, если есть медиа
-    if message.caption:
-        text = message.caption.replace("/broadcast_media", "").strip()
-    else:
-        text = message.text.replace("/broadcast_media", "").strip()
-
-    media_id = None
-    media_type = None
-
-    if message.photo:
-        media_id = message.photo[-1].file_id
-        media_type = "photo"
-    elif message.video:
-        media_id = message.video.file_id
-        media_type = "video"
-    elif message.document:
-        media_id = message.document.file_id
-        media_type = "document"
-
-    await broadcast_media(message.bot, text, media_id, media_type)
-    await message.answer("✅ Медиа-рассылка завершена")
-
 # 📋 Список пользователей
 async def handle_list_users(message: Message):
     if message.from_user.id != ADMIN_ID:
         return
-    cursor.execute("SELECT user_id, username, first_name FROM users")
-    users = cursor.fetchall()
+    users = db.get_users()
     if not users:
         await message.answer("❌ Пока нет сохранённых пользователей")
         return
@@ -229,8 +155,7 @@ async def handle_list_users(message: Message):
 async def handle_export_users(message: Message):
     if message.from_user.id != ADMIN_ID:
         return
-    cursor.execute("SELECT user_id, username, first_name FROM users")
-    users = cursor.fetchall()
+    users = db.get_users()
     if not users:
         await message.answer("❌ Пока нет сохранённых пользователей")
         return
@@ -257,7 +182,6 @@ async def start():
     dp.chat_join_request.register(approve_request, F.chat.id == CHANNEL_ID)
     dp.message.register(handle_start, F.text == "/start")
     dp.message.register(handle_broadcast, F.text.startswith("/broadcast"))
-    dp.message.register(handle_broadcast_media, Command("broadcast_media"))
     dp.message.register(handle_list_users, F.text == "/list_users")
     dp.message.register(handle_export_users, F.text == "/export_users")
     dp.message.register(handle_any_message, F.text)
@@ -269,7 +193,7 @@ async def start():
     finally:
         await bot.session.close()
 
-
+# 🔄 Самопинг
 import threading
 import time
 import requests
@@ -284,8 +208,7 @@ def ping_self():
 
 threading.Thread(target=ping_self).start()
 
-
 if __name__ == '__main__':
-    keep_alive()  # ← добавь эту строку для запуска Flask-сервера
+    keep_alive()  # запуск Flask-сервера
     with contextlib.suppress(KeyboardInterrupt, SystemExit):
         asyncio.run(start())
