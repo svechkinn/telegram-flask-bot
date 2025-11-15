@@ -13,7 +13,7 @@ from aiogram.types import (
     FSInputFile, BufferedInputFile,
 )
 from aiogram.filters import Command
-from aiogram import Bot, Dispatcher, F, types
+from aiogram import Bot, Dispatcher, F, types,
 
 import db   # импортируем наш модуль работы с базой
 
@@ -179,16 +179,12 @@ async def start():
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
 
-    # Инициализация базы
     db.init_db()
 
-    # Команда /start — сохраняем пользователя, но не отвечаем
     @dp.message(Command("start"))
     async def start_handler(message: types.Message):
         db.save_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
-        # без ответа пользователю
 
-    # Команда /list_users — выводим список пользователей
     @dp.message(Command("list_users"))
     async def list_users_handler(message: types.Message):
         users = db.get_users()
@@ -199,13 +195,11 @@ async def start():
         await message.answer(text)
 
     async def main():
-        # снимаем вебхук, чтобы не было конфликта
         await bot.delete_webhook(drop_pending_updates=True)
-        # запускаем polling
         await dp.start_polling(bot)
 
     if __name__ == "__main__":
-        asyncio.run(main())
+        asyncio.run(main())  # ✅ только один вызов
 
     dp.chat_join_request.register(approve_request, F.chat.id == CHANNEL_ID)
     dp.message.register(handle_start, F.text == "/start")
