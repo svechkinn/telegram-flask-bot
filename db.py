@@ -1,8 +1,13 @@
 import sqlite3
+import os
 
 DB_PATH = "/data/users.db"
 
 def init_db():
+    # если файла базы нет — создаём пустой
+    if not os.path.exists(DB_PATH):
+        open(DB_PATH, "w").close()
+
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
