@@ -143,6 +143,16 @@ async def handle_broadcast_media(message: Message):
         await message.answer("❌ Используй команду /broadcast_media как ответ на медиа‑сообщение")
         return
 
+    if not any([
+        message.reply_to_message.photo,
+        message.reply_to_message.video,
+        message.reply_to_message.document,
+        message.reply_to_message.audio,
+        message.reply_to_message.animation
+    ]):
+        await message.answer("❌ Ответ должен быть на медиа‑сообщение (фото, видео, документ и т.д.)")
+        return
+
     users = db.get_users()
     for user_id, username, first_name in users:
         try:
@@ -152,6 +162,7 @@ async def handle_broadcast_media(message: Message):
             print(f"Не удалось отправить {user_id}: {e}")
 
     await message.answer("✅ Рассылка медиа завершена")
+
 
 async def handle_list_users(message: Message):
     if message.from_user.id != ADMIN_ID:
