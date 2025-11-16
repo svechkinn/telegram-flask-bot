@@ -31,7 +31,9 @@ def home():
     return '✅ Бот работает!'
 
 def run():
-    app.run(host='0.0.0.0', port=8080)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
+
 
 def keep_alive():
     t = Thread(target=run)
@@ -214,10 +216,11 @@ async def main():
 def ping_self():
     while True:
         try:
-            requests.get("https://telegram-flask-bot.onrender.com")
+            requests.get("https://telegram-flask-bot-production-eb79.up.railway.app")
         except:
             pass
         time.sleep(600)
+
 
 threading.Thread(target=ping_self).start()
 

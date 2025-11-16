@@ -2,3 +2,5 @@ flask
 aiogram
 python-dotenv
 requests
+psycopg2-binary
+python-telegram-bot
